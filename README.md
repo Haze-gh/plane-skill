@@ -13,6 +13,7 @@
 - **Modules** — list, get, create feature modules
 - **Members** — list workspace members (for finding assignee IDs)
 - **States & Labels** — list for reference
+- **Intake (Inbox)** — list and create intake issues via Python API (no CLI support)
 - Zero dependencies — Python 3.8+ stdlib only
 - Color output with graceful degradation
 - Table and JSON output formats
@@ -109,6 +110,8 @@ plane projects list -f json
 | `plane modules create -p ID --name N` | Create module |
 | `plane states -p ID` | List workflow states |
 | `plane labels -p ID` | List labels |
+| `plane intake list -p ID` | List intake issues (via Python API) |
+| `plane intake create -p ID --name N` | Create intake issue (via Python API) |
 
 ### Filters
 
