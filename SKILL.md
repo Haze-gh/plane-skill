@@ -102,12 +102,53 @@ plane modules list -p PROJECT_ID
 plane modules get -p PROJECT_ID MODULE_ID
 plane modules create -p PROJECT_ID --name "Auth Module" --description "Authentication features"
 ```
-
 ### States & Labels
-
 ```bash
 plane states -p PROJECT_ID    # List workflow states (useful for getting state IDs)
 plane labels -p PROJECT_ID    # List labels (useful for getting label IDs)
+```
+
+### Intake (Inbox)
+
+> ⚠️ **CLI does not support Intake** — use the Python API directly (see below).
+
+The Plane UI labels this feature "Inbox" but the API route is `/intake-issues/`.
+
+On self-hosted instances, only `list` and `create` work; single-item GET/PATCH/DELETE and action endpoints (accept/decline/snooze) return 404 even when `intake_view: true` is enabled on the project.
+
+```bash
+# Intake status values: -2=Triage/Pending, -1=Snoozed, 0=Declined, 1=Accepted
+```
+
+**Python API only** — no CLI equivalent:
+
+```python
+import urllib.request, json, os
+
+api_key = os.environ.get("PLANE_API_KEY")
+workspace = os.environ.get("PLANE_WORKSPACE")          # e.g. "my-team"
+base_url = os.environ.get("PLANE_BASE_URL", "https://api.plane.so")
+
+def api(method, path, data=None):
+    url = f"{base_url}/api/v1/workspaces/{workspace}{path}"
+    body = json.dumps(data).encode() if data else None
+    req = urllib.request.Request(url, data=body, method=method)
+    req.add_header("X-API-Key", api_key)
+    req.add_header("Content-Type", "application/json")
+    with urllib.request.urlopen(req) as resp:
+        return json.loads(resp.read()) if resp.status != 204 else None
+
+# List intake issues
+items = api("GET", f"/projects/{project_id}/intake-issues/")
+for i in items.get("results", []):
+    print(i["id"], i["status"], i["issue_detail"]["name"])
+
+# Create intake issue
+result = api("POST", f"/projects/{project_id}/intake-issues/", {
+    "issue": {"name": "Title", "priority": "high", "description_text": "Details"}
+})
+# Returns: intake_id (top-level "id"), issue_id (issue_detail["id"]), inbox_id ("inbox")
+# These are three different UUIDs — do not mix them up.
 ```
 
 ## Output Formats
